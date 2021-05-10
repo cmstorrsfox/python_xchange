@@ -1,13 +1,21 @@
 import pandas as pd
 import yfinance as yf
-from ta import add_all_ta_features
-import finplot as fplt
 import warnings 
 from tkinter import *
 from tkinter import ttk
+import sys
+import os
+import matplotlib.pyplot as plt
+import mplfinance as mpf
+
 warnings.simplefilter(action="ignore")
 
-ticker_data = pd.read_csv(r"src\NASDAQ.txt", delimiter="\t")
+if getattr(sys, 'frozen', False):
+    os.chdir(sys._MEIPASS)
+
+pd.options.plotting.backend = 'matplotlib'
+
+ticker_data = pd.read_csv(r"NASDAQ.txt", delimiter="\t")
 ticker_data["full"] = ticker_data["Symbol"]+" ("+ticker_data["Description"]+")"
 
 ticker_list = ticker_data["full"].tolist()
@@ -17,6 +25,7 @@ ticker_list = ticker_data["full"].tolist()
 
 #the stock review function
 def get_stock_info(*args):
+
     #get ticker data
     ticker_name = stocknamevar.get()
     ticker_symbol = ticker_name.split()[0]
@@ -68,6 +77,9 @@ def get_stock_info(*args):
     df = df[["Open", "Close", "High", "Low", "Percentage Change", "higher_pattern", "lower_pattern"]]
 
 
+    #mplfinance
+    mpf.plot(df, type="candle", style="yahoo", title=ticker_name+" - Interval = "+interval+" - Period = "+period, ylabel="Price ($)")
+    plt.show()
 
     #reset index
     df.reset_index(level=0, inplace=True)
@@ -80,14 +92,7 @@ def get_stock_info(*args):
     #save high higher lower to Excel
     df.to_excel(ticker_name+" - Interval = "+interval+" - Period = "+period+".xlsx")
 
-    ax = fplt.create_plot(ticker_name+" - "+interval+" - "+period, rows=1)
-    candles = df[[col_names[0], "Open", "Close", "High", "Low"]]
-    fplt.candlestick_ochl(candles, ax=ax)
-    high_wicks = df["higher_pattern"]
-    df.loc[(high_wicks), 'marker'] = df['High']
-    fplt.plot(df[col_names[0]], df['marker'], ax=ax, color='#4a5', style='^', legend='HH')
 
-    fplt.show()
     root.destroy()
     #end of function
 
