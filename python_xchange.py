@@ -3,6 +3,7 @@ import yfinance as yf
 import warnings 
 from tkinter import *
 from tkinter import ttk
+from tkinter import filedialog
 import sys
 import os
 import matplotlib.pyplot as plt
@@ -20,7 +21,10 @@ ticker_data["full"] = ticker_data["Symbol"]+" ("+ticker_data["Description"]+")"
 
 ticker_list = ticker_data["full"].tolist()
 
-
+#show folders function
+def show_folders():
+    output_folder_path = filedialog.askdirectory()
+    outputfoldervar.set(output_folder_path)
 
 
 #the stock review function
@@ -31,6 +35,7 @@ def get_stock_info(*args):
     ticker_symbol = ticker_name.split()[0]
     period = periodvar.get()
     interval = intervalvar.get()
+    output_folder = outputfoldervar.get()
 
     ticker_data = yf.Ticker(ticker_symbol)
 
@@ -90,41 +95,49 @@ def get_stock_info(*args):
     df[col_names[0]] = df[col_names[0]].dt.tz_localize(None)
 
     #save high higher lower to Excel
-    df.to_excel(ticker_name+" - Interval = "+interval+" - Period = "+period+".xlsx")
+    df.to_excel(output_folder+"/"+ticker_name+" - Interval = "+interval+" - Period = "+period+".xlsx")
 
 
     root.destroy()
     #end of function
 
+
 #create GUI
 #root
 root = Tk()
+root.title("Stock Overview App")
+
 
 #variables
 stocknamevar = StringVar()
 periodvar = StringVar()
 intervalvar = StringVar()
+outputfoldervar = StringVar()
 
 #elements
 content = ttk.Frame(root)
 stock_label = ttk.Label(content, text="Choose a stock")
-stock = ttk.Combobox(content, values=ticker_list, textvariable=stocknamevar)
+stock = ttk.Combobox(content, values=ticker_list, textvariable=stocknamevar, width=50)
 period_label = ttk.Label(content, text="Choose a period to review")
-period = ttk.Combobox(content, values=["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"], textvariable=periodvar)
+period = ttk.Combobox(content, values=["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"], textvariable=periodvar, width=50)
 interval_label = ttk.Label(content, text="Choose an interval")
-interval = ttk.Combobox(content, values=["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1d", "5d", "1wk", "1mo", "3mo"], textvariable=intervalvar)
+interval = ttk.Combobox(content, values=["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1d", "5d", "1wk", "1mo", "3mo"], textvariable=intervalvar, width=50)
+browse_label = ttk.Label(content, text="Choose where to save the file")
+browse = ttk.Button(content, text="Browse", command=show_folders)
 submit = ttk.Button(content, text="Submit", command=get_stock_info)
 
 
 #layout
-content.grid(column=0, row=0, pady=3, padx=3)
-stock_label.grid(column=0, row=1, pady=3, padx=3)
-stock.grid(column=1, row=1, pady=3, padx=3)
-period_label.grid(column=0, row=2, pady=3, padx=3)
-period.grid(column=1, row=2, pady=3, padx=3)
-interval_label.grid(column=0, row=3, pady=3, padx=3)
-interval.grid(column=1, row=3, pady=3, padx=3)
-submit.grid(column=0, row=4, columnspan=2, pady=3, padx=3)
+content.grid(column=0, row=0, pady=5, padx=3)
+stock_label.grid(column=0, row=1, pady=5, padx=3)
+stock.grid(column=1, row=1, pady=5, padx=3)
+period_label.grid(column=0, row=2, pady=5, padx=3)
+period.grid(column=1, row=2, pady=5, padx=3)
+interval_label.grid(column=0, row=3, pady=5, padx=3)
+interval.grid(column=1, row=3, pady=5, padx=3)
+browse_label.grid(column=0, row=4, pady=5, padx=3)
+browse.grid(column=1, row=4, pady=5, padx=3)
+submit.grid(column=0, row=5, columnspan=2, pady=5, padx=3)
 
 root.mainloop()
 
