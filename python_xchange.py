@@ -31,15 +31,15 @@ def show_folders():
     outputfoldervar.set(output_folder_path)
 
 
-#the stock review function
-def get_stock_info(*args):
+#create df function
+def create_df():
 
     #get ticker data
     ticker_name = stocknamevar.get()
     ticker_symbol = ticker_name.split(" ")[0]
     period = periodvar.get()
     interval = intervalvar.get()
-    output_folder = outputfoldervar.get()
+    
 
     ticker_data = yf.Ticker(ticker_symbol)
 
@@ -85,42 +85,54 @@ def get_stock_info(*args):
     #remove unnecessary columns from df
     df = df[["Open", "Close", "High", "Low", "Percentage Change", "higher_pattern", "lower_pattern"]]
 
+    return df
+
+
+#the stock review function
+def draw_chart(*args):
+    ticker_name = stocknamevar.get()
+    period = periodvar.get()
+    interval = intervalvar.get()
+    
+    #get df info
+    data = create_df()
+
 
     #mplfinance
-    fig, ax = mpf.plot(df, type="candle", style="yahoo", title=ticker_name+" - Interval = "+interval+" - Period = "+period, ylabel="Price ($)", returnfig=True)
+    fig, ax = mpf.plot(data, type="candle", style="yahoo", title=ticker_name+" - Interval = "+interval+" - Period = "+period, ylabel="Price ($)", returnfig=True)
     
     canvas = FigureCanvasTkAgg(fig, master=root)
     canvas.draw()
 
     toolbarFrame = Frame(master=root)
-    toolbarFrame.grid(row=7,column=0)
+    toolbarFrame.grid(row=8,column=0)
     toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
 
     toolbar.update()
 
-    canvas.get_tk_widget().grid(column=0, row=6, pady=3)
+    canvas.get_tk_widget().grid(column=0, row=7, pady=10, padx=10)
 
-    #reset index
-    df.reset_index(level=0, inplace=True)
-    col_names = df.columns
+    #end of chart function
 
-    #remove timezone from columns
-    
-    df[col_names[0]] = df[col_names[0]].dt.tz_localize(None)
 
-    #save high higher lower to Excel
+#save function
+def save_df():
+    df = create_df()
+    output_folder = outputfoldervar.get()
+    ticker_name = stocknamevar.get()
+    period = periodvar.get()
+    interval = intervalvar.get()
+
+
+    #save data to excel
     df.to_excel(output_folder+"/"+ticker_name+" - Interval = "+interval+" - Period = "+period+".xlsx")
-
-
-    #root.destroy()
-    #end of function
 
 
 #create GUI
 #root
 root = Tk()
 root.title("Stock Overview App")
-root.geometry("800x800")
+root.geometry("850x850")
 
 
 #variables
@@ -139,7 +151,9 @@ interval_label = ttk.Label(content, text="Choose an interval", anchor="w")
 interval = ttk.Combobox(content, values=["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1d", "5d", "1wk", "1mo", "3mo"], textvariable=intervalvar, width=50)
 browse_label = ttk.Label(content, text="Choose where to save the file", anchor="w")
 browse = ttk.Button(content, text="Browse", command=show_folders)
-submit = ttk.Button(content, text="Submit", command=get_stock_info)
+location = ttk.Entry(content, textvariable=outputfoldervar, width=50)
+submit = ttk.Button(content, text="Plot chart", command=draw_chart)
+save = ttk.Button(content, text="Download data", command=save_df)
 
 
 #layout
@@ -150,9 +164,11 @@ period_label.grid(column=0, row=2, pady=5)
 period.grid(column=1, row=2, pady=5)
 interval_label.grid(column=0, row=3, pady=5)
 interval.grid(column=1, row=3, pady=5)
-browse_label.grid(column=0, row=4, pady=5)
-browse.grid(column=1, row=4, pady=5)
-submit.grid(column=1, row=5, columnspan=2, pady=5)
+submit.grid(column=1, row=4, padx=10, pady=10)
+browse_label.grid(column=0, row=5, pady=5)
+location.grid(column=1, row=5, pady=5)
+browse.grid(column=2, row=5, pady=5)
+save.grid(column=3, row=5, padx=10, pady=10)
 
 root.mainloop()
 
